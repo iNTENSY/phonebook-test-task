@@ -17,14 +17,22 @@ def input_util():
 
 def converted_to_dict_input() -> dict[str, str]:
     """
-    Данная функция использует input_util(), для того, чтобы конвертировать
-    обычное выполнение функции в тип данных dict(). Переменная converted_data
-    имеет в себе исключительно те, пары, у которых значение промежуточного словаря
-    не пустое.
+    Данная функция использует input_util(), для того,
+    чтобы конвертировать обычное выполнение функции
+    в тип данных dict(). Переменная converted_data
+    имеет в себе исключительно те, пары, у которых
+    значение промежуточного словаря не пустое.
     """
     inputs = input_util()
-    fields: list[str] = ['surname', 'name', 'patronymic', 'organization', 'work_phone', 'personal_phone']
-    converted_data = {key: f'%{value}%' for key, value in dict(zip(fields, inputs)).items() if value}
+    fields: list[str] = [
+        'surname', 'name', 'patronymic',
+        'organization', 'work_phone', 'personal_phone'
+    ]
+    converted_data = (
+        {key: f'%{value}%'
+         for key, value in dict(zip(fields, inputs)).items()
+         if value}
+    )
     print(converted_data)
     return converted_data
 
@@ -112,14 +120,19 @@ class MessageHandlerMixin:
         print(message)
         self.command_handler()
 
-    def get_list_data(self, page: int = 1, data: list = None, is_filtered: bool = False) -> None:
+    def get_list_data(self,
+                      page: int = 1,
+                      data: list = None,
+                      is_filtered: bool = False) -> None:
         """
         Данный метод позволяет пользователю исследовать
         свой телефонный справочник на наличие записей.
         """
         self.clear_console()
 
-        self.print_table(page=page, data=self.db.get_data() if data is None else data)
+        self.print_table(
+            page=page, data=self.db.get_data() if data is None else data
+        )
 
         command = input('Номер страницы >> ')
         (self.get_list_data(int(command), data=data, is_filtered=is_filtered)
@@ -161,7 +174,8 @@ class DataEditorMixin:
         self.send_information()
 
     def get_filtered_data(self):
-        print('Нажмите "Enter", если вы не хотите использовать это поле для фильтра.')
+        print('Нажмите "Enter", если вы не хотите '
+              'использовать это поле для фильтра.')
         result = self.db.filtered_data(kwargs=converted_to_dict_input())
         self.get_list_data(data=result)
         input()
@@ -173,8 +187,11 @@ class DataEditorMixin:
     def send_information(self) -> None:
         raise NotImplementedError('Переопределите метод "send_information"')
 
-    def make_table(self, is_personal: bool = False, data = None) -> PrettyTable:
+    def make_table(self, is_personal: bool = False, data=None) -> PrettyTable:
         raise NotImplementedError('Переопределите метод "make_table"')
 
-    def get_list_data(self, page: int = 1, data: list = None, is_filtered: bool = False) -> None:
+    def get_list_data(self,
+                      page: int = 1,
+                      data: list = None,
+                      is_filtered: bool = False) -> None:
         raise NotImplementedError
