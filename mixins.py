@@ -6,13 +6,27 @@ from prettytable import PrettyTable
 
 def input_util():
     surname: str = input('Введите фамилию >> ')
-    first_name: str = input('Введите имя >> ')
+    name: str = input('Введите имя >> ')
     patronymic: str = input('Введите отчество >> ')
     organization: str = input('Введите организацию >> ')
     work_phone: str = input('Введите рабочий телефон >> ')
     personal_phone: str = input('Введите личный телефон >> ')
-    return [surname, first_name, patronymic,
+    return [surname, name, patronymic,
             organization, work_phone, personal_phone]
+
+
+def converted_to_dict_input() -> dict[str, str]:
+    """
+    Данная функция использует input_util(), для того, чтобы конвертировать
+    обычное выполнение функции в тип данных dict(). Переменная converted_data
+    имеет в себе исключительно те, пары, у которых значение промежуточного словаря
+    не пустое.
+    """
+    inputs = input_util()
+    fields: list[str] = ['surname', 'name', 'patronymic', 'organization', 'work_phone', 'personal_phone']
+    converted_data = {key: f'%{value}%' for key, value in dict(zip(fields, inputs)).items() if value}
+    print(converted_data)
+    return converted_data
 
 
 class CommandHandlerMixin:
@@ -25,7 +39,8 @@ class CommandHandlerMixin:
             '': exit,
             '1': self.get_list_data,
             '2': self.add_data,
-            '3': self.edit_personal_page
+            '3': self.edit_personal_page,
+            '4': self.get_filtered_data,
         }
         types[command]() if command in types.keys() else types['']()
 
@@ -38,12 +53,15 @@ class CommandHandlerMixin:
     def edit_personal_page(self):
         raise NotImplementedError('Переопределите метод "edit_personal_page"')
 
+    def get_filtered_data(self):
+        raise NotImplementedError
+
 
 class MessageHandlerMixin:
     """
     Данный класс позволяет реализовать методы отрисовки данных в консоль.
     """
-    PAGINATE_BY: int = 2
+    PAGINATE_BY: int = 3
     FIELD_NAMES: tuple[str] = (
         'ID', 'Имя', 'Фамилия', 'отчество',
         'Организация', 'Рабочий телефон', 'Личный телефон'
@@ -54,7 +72,7 @@ class MessageHandlerMixin:
         Данный метод печатает таблицу в соответствии со страницей.
         """
         self.clear_console()
-        print(self.make_table(page=page, data=list(data)))
+        print(self.make_table(page=page, data=data))
         print('Нажмите "Enter" чтобы вернуться')
 
     def make_table(self,
@@ -94,18 +112,17 @@ class MessageHandlerMixin:
         print(message)
         self.command_handler()
 
-    def get_list_data(self, page: int = 1, data: list = None) -> None:
+    def get_list_data(self, page: int = 1, data: list = None, is_filtered: bool = False) -> None:
         """
         Данный метод позволяет пользователю исследовать
         свой телефонный справочник на наличие записей.
         """
         self.clear_console()
 
-        queryset = self.db.get_data()
-        self.print_table(page=page, data=queryset)
+        self.print_table(page=page, data=self.db.get_data() if data is None else data)
 
         command = input('Номер страницы >> ')
-        (self.get_list_data(int(command), data=data)
+        (self.get_list_data(int(command), data=data, is_filtered=is_filtered)
          if command.isdigit() else self.send_information())
 
     @staticmethod
@@ -143,11 +160,21 @@ class DataEditorMixin:
         self.db.push_data(value=values)
         self.send_information()
 
+    def get_filtered_data(self):
+        print('Нажмите "Enter", если вы не хотите использовать это поле для фильтра.')
+        result = self.db.filtered_data(kwargs=converted_to_dict_input())
+        self.get_list_data(data=result)
+        input()
+        self.send_information()
+
     def clear_console(self) -> None:
         raise NotImplementedError('Переопределите метод "clear_console"')
 
     def send_information(self) -> None:
         raise NotImplementedError('Переопределите метод "send_information"')
 
-    def make_table(self, is_personal, data) -> PrettyTable:
+    def make_table(self, is_personal: bool = False, data = None) -> PrettyTable:
         raise NotImplementedError('Переопределите метод "make_table"')
+
+    def get_list_data(self, page: int = 1, data: list = None, is_filtered: bool = False) -> None:
+        raise NotImplementedError

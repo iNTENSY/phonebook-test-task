@@ -32,12 +32,12 @@ class Database(Connection):
             """
         self.cur.execute(q)
 
-    def get_data(self):
+    def get_data(self) -> list:
         q = """
                 SELECT * FROM phonebook;
             """
         results = self.cur.execute(q)
-        return results
+        return list(results)
 
     def push_data(self, value: tuple):
         q = """
@@ -70,3 +70,11 @@ class Database(Connection):
             """
         self.cur.execute(q, value)
         self.connect.commit()
+
+    def filtered_data(self, kwargs):
+        q = "SELECT * FROM phonebook WHERE "
+        for key, value in kwargs.items():
+            q += f'{key} LIKE "{value}"' if q.endswith(' ') else f' and {key} LIKE "{value}"'
+        result = self.cur.execute(q)
+        return list(result)
+
