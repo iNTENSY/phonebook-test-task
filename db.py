@@ -1,46 +1,69 @@
 import csv
+import json
 
 
 class Database:
     @staticmethod
     def create_database():
-        with open('db.csv', 'w', encoding='utf-8', newline='') as csvfile:
-            writer = csv.writer(csvfile)
-            writer.writerow(
-                ('Фамилия', 'Имя', 'Отчество', 'Организация', 'Рабочий телефон', 'Личный телефон')
-            )
+        with open('db.json', 'w', encoding='utf-8') as jsonfile:
+            pass
 
     @staticmethod
     def get_data() -> list:
-        with open('db.csv', 'r', encoding='utf-8') as csvfile:
-            reader = csv.reader(csvfile)
-            return list(reader)[1:]
+        database = open('db.json', 'r', encoding='utf-8')
+        reader = json.load(database)
+        database.close()
+        return reader
 
 
     def push_data(self, value: list):
         last_id: int = int(max(self.get_data(), key = lambda row: int(row[0]))[0])
         value.insert(0, last_id + 1)
         print(f'Добавляю: {value}')
-        with open('db.csv', 'a+', encoding='utf-8', newline='') as csvfile:
-            writer = csv.writer(csvfile, delimiter=',')
-            writer.writerow(value)
+        with open('db.csv', 'a+', encoding='utf-8', newline='') as jsonfile:
+            json.dump(value, jsonfile)
 
 
 
     @staticmethod
     def push_test_data():
-        with open('db.csv', 'a+', encoding='utf-8', newline='') as csvfile:
-            writer = csv.writer(csvfile, delimiter=',')
+        with open('db.json', 'w', encoding='utf-8') as jsonfile:
             userdata = [
-                ['0', '-', '-', '-', '-', '777', '888'],
-                ['1', 'Имя1', 'Фамилия1', 'Отчество1', 'Организация1', 'Раб. номер1', 'Личн. номер1'],
-                ['2', 'Имя2', 'Фамилия2', 'Отчество2', 'Организация2', 'Раб. номер2', 'Личн. номер2'],
-                ['3', 'Имя3', 'Фамилия3', 'Отчество3', 'Организация3', 'Раб. номер3', 'Личн. номер3'],
-                ['4', 'Имя4', 'Фамилия4', 'Отчество4', 'Организация4', 'Раб. номер4', 'Личн. номер4'],
-                ['5', 'Имя5', 'Фамилия5', 'Отчество5', 'Организация5', 'Раб. номер5', 'Личн. номер5'],
-                ['6', 'Имя6', 'Фамилия6', 'Отчество6', 'Организация6', 'Раб. номер6', 'Личн. номер6'],
-                ['7', 'Имя7', 'Фамилия7', 'Отчество7', 'Организация7', 'Раб. номер7', 'Личн. номер7'],
-                ['8', 'Имя8', 'Фамилия8', 'Отчество8', 'Организация8', 'Раб. номер8', 'Личн. номер8'],
-                ['9', 'Имя9', 'Фамилия9', 'Отчество9', 'Организация9', 'Раб. номер9', 'Личн. номер9'],
+                {
+                    'id': 0,
+                    'surname': '-',
+                    'first_name': '-',
+                    'patronymic': '-',
+                    'organization': '-',
+                    'work_phone': 777,
+                    'personal_phone': 888,
+                },
+                {
+                    'id': 1,
+                    'surname': 'Имя1',
+                    'first_name': 'Фамилия1',
+                    'patronymic': 'Отчество1',
+                    'organization': 'Организация1',
+                    'work_phone': 111,
+                    'personal_phone': 110,
+                },
+                {
+                    'id': 2,
+                    'surname': 'Имя2',
+                    'first_name': 'Фамилия2',
+                    'patronymic': 'Отчество2',
+                    'organization': 'Организация2',
+                    'work_phone': 222,
+                    'personal_phone': 221,
+                },
+                {
+                    'id': 3,
+                    'surname': 'Имя3',
+                    'first_name': 'Фамилия3',
+                    'patronymic': 'Отчество3',
+                    'organization': 'Организация3',
+                    'work_phone': 333,
+                    'personal_phone': 332,
+                },
             ]
-            writer.writerows(userdata)
+            json.dump(userdata, jsonfile, indent=4)

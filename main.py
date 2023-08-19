@@ -1,3 +1,5 @@
+import abc
+import json
 import os
 
 from prettytable import PrettyTable
@@ -6,53 +8,62 @@ import db as database
 
 
 
-class Phonebook:
-    PAGINATE_BY: int = 5
-    FIELD_NAMES: tuple[str] = ('ID', 'Фамилия', 'Имя', 'отчество', 'Организация', 'Рабочий телефон', 'Личный телефон')
+class InformationInt(abc.ABC):
+    PAGINATE_BY: int = 2
+    FIELD_NAMES: tuple[str] = (
+        'ID', 'Фамилия', 'Имя', 'отчество',
+        'Организация', 'Рабочий телефон', 'Личный телефон'
+    )
 
-    def __new__(cls, *args, **kwargs):
-        print('\nВы запустили телефонный справочник!')
-        return super().__new__(cls, *args, **kwargs)
+    @abc.abstractmethod
+    def make_table(self, page: int, data: list) -> PrettyTable:
+        index: int = self.PAGINATE_BY * page
+        table = PrettyTable()
+        table.field_names = self.FIELD_NAMES
+        for row in range(index - self.PAGINATE_BY, index if index <= len(data) else len(data)):
+            table.add_row(data[row].values())
+        return table
 
-    def __init__(self):
-        self.clear_console()
-        self.information()
 
-
-    def information(self) -> None:
+    @abc.abstractmethod
+    def send_information(self) -> None:
         message: str = ('Перед вами список основных возможностей:\n'
                         '1. Вывод постранично записей из справочника на экран\n'
                         '2. Добавление новой записи в справочник\n'
                         '3. Возможность редактирования записей в справочнике\n'
                         '4. Поиск записей по одной или нескольким характеристикам\n')
         print(message)
-        self.command_handler()
+
+
+class Phonebook(InformationInt):
+    def __init__(self):
+        print('\nВы запустили телефонный справочник!')
+        self.clear_console()
+        self.send_information()
 
 
     def command_handler(self) -> None:
         command = input('Введите требуемую команду: ')
         command_types = {
-            '1': self.list_of_records,
+            '1': self.get_list_data,
             '2': self.add_data
         }
         command_types[command]()
 
 
-    def list_of_records(self, page: int = 1, data: list = None):
+    def get_list_data(self, page: int = 1, data: list = None):
         self.clear_console()
-        print('Чтобы вернуться обратно введите: *')
 
         if data is None:
             data = database.Database.get_data()
 
-        table = self.make_table(page, data)
-        print(table)
+        self.make_table(page, data)
 
         command = input('>> ')
         if command == '*':
-            self.information()
+            self.send_information()
         elif command.isdigit():
-            self.list_of_records(int(command), data=data)
+            self.get_list_data(int(command), data=data)
 
 
     def add_data(self):
@@ -67,20 +78,24 @@ class Phonebook:
         work_phone: str = input('Введите рабочий телефон >> ')
         personal_phone: str = input('Введите личный телефон >> ')
 
-        data.push_data(value=[surname, first_name, patronymic, organization, work_phone, personal_phone])
+        data.push_data(
+            value=[surname, first_name, patronymic, organization, work_phone, personal_phone]
+        )
 
-        self.list_of_records()
+        self.get_list_data()
 
 
+    def make_table(self, page: int, data: list) -> None:
+        self.clear_console()
+        table = super().make_table(page, data)
+        print(table)
+        print('Чтобы вернуться обратно введите: *')
 
 
-    def make_table(self, page: int, data: list):
-        index: int = self.PAGINATE_BY * page
-        table = PrettyTable()
-        table.field_names = self.FIELD_NAMES
-        for row in range(index - self.PAGINATE_BY, index if index <= len(data) else len(data)):
-            table.add_row(data[row])
-        return table
+    def send_information(self) -> None:
+        self.clear_console()
+        super().send_information()
+        self.command_handler()
 
 
     @staticmethod
@@ -88,10 +103,21 @@ class Phonebook:
         os.system('cls')
 
 
-
 if __name__ == '__main__':
     db = database.Database()
-    if not os.path.exists('db.csv'):
+    if not os.path.exists('db.json'):
         db.create_database()
         db.push_test_data()
-    Phonebook()
+    # Phonebook()
+    data = {
+        "id": 4,
+        "surname": "-",
+        "first_name": "-",
+        "patronymic": "-",
+        "organization": "-",
+        "work_phone": 777,
+        "personal_phone": 888
+    }
+    with open('db.json', 'a', encoding='utf-8') as f:
+        n = json.load(f)
+        n.append(data)
