@@ -49,10 +49,15 @@ class Database(Connection):
         self.cur.execute(q, value)
         self.connect.commit()
 
+    def delete_data(self, personal_id: int):
+        q = f"DELETE FROM phonebook WHERE id = {personal_id};"
+        self.cur.execute(q)
+        self.connect.commit()
+
     def get_personal_data(self, personal_id) -> list:
         q = f"""
                 SELECT * FROM phonebook
-                WHERE id = {personal_id}
+                WHERE id = {personal_id};
             """
         result = self.cur.execute(q)
         return list(result)
@@ -66,7 +71,7 @@ class Database(Connection):
                     organization = ?,
                     work_phone = ?,
                     personal_phone = ?
-                WHERE id = {personal_id}
+                WHERE id = {personal_id};
             """
         self.cur.execute(q, value)
         self.connect.commit()

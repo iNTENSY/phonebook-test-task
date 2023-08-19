@@ -1,13 +1,13 @@
 import os
 
 import db as database
-from mixins import MessageHandlerMixin, CommandHandlerMixin, DataEditorMixin
+from mixins import MessageHandler, CommandHandler, DataHandler
 
 
 class Phonebook(
-    MessageHandlerMixin,
-    DataEditorMixin,
-    CommandHandlerMixin
+    MessageHandler,
+    DataHandler,
+    CommandHandler
 ):
     def __init__(self):
         self.db = database.Database()

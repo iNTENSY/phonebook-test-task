@@ -1,3 +1,4 @@
+import abc
 import os
 from time import sleep
 
@@ -37,7 +38,7 @@ def converted_to_dict_input() -> dict[str, str]:
     return converted_data
 
 
-class CommandHandlerMixin:
+class CommandHandler(abc.ABC):
     """
     Данный класс используется в качестве обработчика команд.
     """
@@ -49,6 +50,7 @@ class CommandHandlerMixin:
             '2': self.add_data,
             '3': self.edit_personal_page,
             '4': self.get_filtered_data,
+            '5': self.delete_data
         }
         types[command]() if command in types.keys() else types['']()
 
@@ -62,10 +64,13 @@ class CommandHandlerMixin:
         raise NotImplementedError('Переопределите метод "edit_personal_page"')
 
     def get_filtered_data(self):
-        raise NotImplementedError
+        raise NotImplementedError('Переопределите метод "get_filtered_data"')
+
+    def delete_data(self):
+        raise NotImplementedError('Переопределите метод "delete_data"')
 
 
-class MessageHandlerMixin:
+class MessageHandler:
     """
     Данный класс позволяет реализовать методы отрисовки данных в консоль.
     """
@@ -116,6 +121,8 @@ class MessageHandlerMixin:
             '2. Добавление новой записи в справочник\n'
             '3. Возможность редактирования записей в справочнике\n'
             '4. Поиск записей по одной или нескольким характеристикам\n'
+            '5. Удалить запись по ID\n'
+            '\nНажмите "Enter", если вы не хотите завершить работу справочника.'
         )
         print(message)
         self.command_handler()
@@ -144,7 +151,7 @@ class MessageHandlerMixin:
         print('\n')
 
 
-class DataEditorMixin:
+class DataHandler:
     """
     Данный класс позволяет манипулировать данными.
     """
@@ -173,12 +180,23 @@ class DataEditorMixin:
         self.db.push_data(value=values)
         self.send_information()
 
-    def get_filtered_data(self):
+    def get_filtered_data(self) -> None:
+        """
+        Данный метод фильтрует данные, которые
+        пользователь вводит для поиска записей.
+        """
         print('Нажмите "Enter", если вы не хотите '
               'использовать это поле для фильтра.')
         result = self.db.filtered_data(kwargs=converted_to_dict_input())
         self.get_list_data(data=result)
         input()
+        self.send_information()
+
+    def delete_data(self) -> None:
+        self.clear_console()
+        personal_id: int = int(input('Введите ID записи >> '))
+
+        self.db.delete_data(personal_id)
         self.send_information()
 
     def clear_console(self) -> None:
@@ -194,4 +212,4 @@ class DataEditorMixin:
                       page: int = 1,
                       data: list = None,
                       is_filtered: bool = False) -> None:
-        raise NotImplementedError
+        raise NotImplementedError('Переопределите метод "get_list_data"')
