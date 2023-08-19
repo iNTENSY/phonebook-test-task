@@ -1,69 +1,72 @@
-import csv
-import json
+import sqlite3
 
 
-class Database:
-    @staticmethod
-    def create_database():
-        with open('db.json', 'w', encoding='utf-8') as jsonfile:
-            pass
+class Connection:
+    def __init__(self):
+        self.connect = sqlite3.connect('db.sqlite')
+        self.cur = self.connect.cursor()
 
-    @staticmethod
-    def get_data() -> list:
-        database = open('db.json', 'r', encoding='utf-8')
-        reader = json.load(database)
-        database.close()
-        return reader
+    def close(self):
+        self.connect.close()
 
 
-    def push_data(self, value: list):
-        last_id: int = int(max(self.get_data(), key = lambda row: int(row[0]))[0])
-        value.insert(0, last_id + 1)
-        print(f'Добавляю: {value}')
-        with open('db.csv', 'a+', encoding='utf-8', newline='') as jsonfile:
-            json.dump(value, jsonfile)
+class Database(Connection):
+    def create_database(self):
+        q = """
+                CREATE TABLE IF NOT EXISTS phonebook (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  name VARCHAR(50),
+                  surname VARCHAR(50),
+                  patronymic VARCHAR(50),
+                  organization VARCHAR(50),
+                  work_phone VARCHAR(15),
+                  personal_phone VARCHAR(15)
+                );
+            """
 
+        self.cur.execute(q)
 
+    def drop_table(self):
+        q = """
+                DROP TABLE phonebook;
+            """
+        self.cur.execute(q)
 
-    @staticmethod
-    def push_test_data():
-        with open('db.json', 'w', encoding='utf-8') as jsonfile:
-            userdata = [
-                {
-                    'id': 0,
-                    'surname': '-',
-                    'first_name': '-',
-                    'patronymic': '-',
-                    'organization': '-',
-                    'work_phone': 777,
-                    'personal_phone': 888,
-                },
-                {
-                    'id': 1,
-                    'surname': 'Имя1',
-                    'first_name': 'Фамилия1',
-                    'patronymic': 'Отчество1',
-                    'organization': 'Организация1',
-                    'work_phone': 111,
-                    'personal_phone': 110,
-                },
-                {
-                    'id': 2,
-                    'surname': 'Имя2',
-                    'first_name': 'Фамилия2',
-                    'patronymic': 'Отчество2',
-                    'organization': 'Организация2',
-                    'work_phone': 222,
-                    'personal_phone': 221,
-                },
-                {
-                    'id': 3,
-                    'surname': 'Имя3',
-                    'first_name': 'Фамилия3',
-                    'patronymic': 'Отчество3',
-                    'organization': 'Организация3',
-                    'work_phone': 333,
-                    'personal_phone': 332,
-                },
-            ]
-            json.dump(userdata, jsonfile, indent=4)
+    def get_data(self):
+        q = """
+                SELECT * FROM phonebook;
+            """
+        results = self.cur.execute(q)
+        return results
+
+    def push_data(self, value: tuple):
+        q = """
+                INSERT INTO phonebook
+                (name, surname, patronymic,
+                organization, work_phone, personal_phone)
+                VALUES(?, ?, ?, ?, ?, ?);
+            """
+        self.cur.execute(q, value)
+        self.connect.commit()
+
+    def get_personal_data(self, personal_id) -> list:
+        q = f"""
+                SELECT * FROM phonebook
+                WHERE id = {personal_id}
+            """
+        result = self.cur.execute(q)
+        return list(result)
+
+    def remake_personal_data(self, personal_id: int, value: tuple):
+        q = f"""
+                UPDATE phonebook
+                SET surname = ?,
+                    name = ?,
+                    patronymic = ?,
+                    organization = ?,
+                    work_phone = ?,
+                    personal_phone = ?
+                WHERE id = {personal_id}
+            """
+        self.cur.execute(q, value)
+        self.connect.commit()
