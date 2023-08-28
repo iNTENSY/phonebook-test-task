@@ -1,6 +1,6 @@
 """
 Вы можете автоматически подгрузить данные в базу данных.
-Данный действие можно повторять неограниченное количество раз.
+Данное действие можно повторять неограниченное количество раз.
 """
 from db import Database
 
@@ -18,13 +18,17 @@ userdata = (
     ('Имя10', 'Фамилия10', 'Отчество10', 'Организация10', '10', '1010'),
 )
 
-if __name__ == '__main__':
+def run() -> None:
+    """Данная функция позволяет добавить тестовые данные в БД."""
     db = Database()
     db.create_database()
     cursor = db.cur
     query = """INSERT INTO phonebook
-               (name, surname, patronymic, organization, work_phone, personal_phone)
-               VALUES (?, ?, ?, ?, ?, ?);"""
+                   (name, surname, patronymic, organization, work_phone, personal_phone)
+                   VALUES (?, ?, ?, ?, ?, ?);"""
     cursor.executemany(query, userdata)
     db.connect.commit()
     db.close()
+
+if __name__ == '__main__':
+    run()

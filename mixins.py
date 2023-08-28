@@ -4,6 +4,8 @@ from time import sleep
 
 from prettytable import PrettyTable
 
+from data import run
+
 
 def input_util():
     surname: str = input('Введите фамилию >> ')
@@ -37,56 +39,12 @@ def converted_to_dict_input() -> dict[str, str]:
     print(converted_data)
     return converted_data
 
-
-class CommandHandler(abc.ABC):
-    """
-    Данный класс используется в качестве обработчика команд.
-    """
-    def command_handler(self) -> None:
-        command: str = input('Введите требуемую команду: ')
-        types = {
-            '': exit,
-            '1': self.get_list_data,
-            '2': self.add_data,
-            '3': self.edit_personal_page,
-            '4': self.get_filtered_data,
-            '5': self.delete_data
-        }
-        types[command]() if command in types.keys() else types['']()
-
-    def get_list_data(self):
-        raise NotImplementedError('Переопределите метод "get_list_data"')
-
-    def add_data(self):
-        raise NotImplementedError('Переопределите метод "add_data"')
-
-    def edit_personal_page(self):
-        raise NotImplementedError('Переопределите метод "edit_personal_page"')
-
-    def get_filtered_data(self):
-        raise NotImplementedError('Переопределите метод "get_filtered_data"')
-
-    def delete_data(self):
-        raise NotImplementedError('Переопределите метод "delete_data"')
-
-
-class MessageHandler:
-    """
-    Данный класс позволяет реализовать методы отрисовки данных в консоль.
-    """
+class TableCreator:
     PAGINATE_BY: int = 3
     FIELD_NAMES: tuple[str] = (
         'ID', 'Имя', 'Фамилия', 'отчество',
         'Организация', 'Рабочий телефон', 'Личный телефон'
     )
-
-    def print_table(self, page: int = 1, data: list = None) -> None:
-        """
-        Данный метод печатает таблицу в соответствии со страницей.
-        """
-        self.clear_console()
-        print(self.make_table(page=page, data=data))
-        print('Нажмите "Enter" чтобы вернуться')
 
     def make_table(self,
                    page: int = 1,
@@ -109,6 +67,60 @@ class MessageHandler:
             table.add_row(data[0])
         return table
 
+
+class CommandHandler(abc.ABC):
+    """
+    Данный класс используется в качестве обработчика команд.
+    """
+    def command_handler(self) -> None:
+        command: str = input('Введите требуемую команду: ')
+        types = {
+            '': exit,
+            '1': self.get_list_data,
+            '2': self.add_data,
+            '3': self.edit_personal_page,
+            '4': self.get_filtered_data,
+            '5': self.delete_data,
+            '6': self.add_test_data
+        }
+        types[command]() if command in types.keys() else types['']()
+
+    def get_list_data(self):
+        raise NotImplementedError('Переопределите метод "get_list_data"')
+
+    def add_data(self):
+        raise NotImplementedError('Переопределите метод "add_data"')
+
+    def edit_personal_page(self):
+        raise NotImplementedError('Переопределите метод "edit_personal_page"')
+
+    def get_filtered_data(self):
+        raise NotImplementedError('Переопределите метод "get_filtered_data"')
+
+    def delete_data(self):
+        raise NotImplementedError('Переопределите метод "delete_data"')
+
+    def add_test_data(self):
+        raise NotImplementedError('Переопределите метод "add_test_data"')
+
+class MessageHandler(TableCreator):
+    """
+    Данный класс позволяет реализовать методы отрисовки данных в консоль.
+    """
+    PAGINATE_BY: int = 3
+    FIELD_NAMES: tuple[str] = (
+        'ID', 'Имя', 'Фамилия', 'отчество',
+        'Организация', 'Рабочий телефон', 'Личный телефон'
+    )
+
+    def print_table(self, page: int = 1, data: list = None) -> None:
+        """
+        Данный метод печатает таблицу в соответствии со страницей.
+        """
+        self.clear_console()
+        print(self.make_table(page=page, data=data))
+        print('Нажмите "Enter" чтобы вернуться')
+
     def send_information(self) -> None:
         """
         Данный метод печатает в консоль информацию
@@ -122,6 +134,7 @@ class MessageHandler:
             '3. Возможность редактирования записей в справочнике\n'
             '4. Поиск записей по одной или нескольким характеристикам\n'
             '5. Удалить запись по ID\n'
+            '6. Добавить тестовые данные\n'
             '\nНажмите "Enter", если вы не хотите завершить работу справочника.'
         )
         print(message)
@@ -197,6 +210,10 @@ class DataHandler:
         personal_id: int = int(input('Введите ID записи >> '))
 
         self.db.delete_data(personal_id)
+        self.send_information()
+
+    def add_test_data(self) -> None:
+        run()
         self.send_information()
 
     def clear_console(self) -> None:
